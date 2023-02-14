@@ -15,8 +15,8 @@ const BoundingBoxes = (props) => {
   const hoverCanvasHandler = (e) => {
     setCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
     setOverlayPosition({
-      x: e.nativeEvent.clientX + 20 + "px",
-      y: e.nativeEvent.clientY - 25 + "px",
+      x: e.nativeEvent.pageX + 20 + "px",
+      y: e.nativeEvent.pageY - 25 + "px",
     });
   };
 

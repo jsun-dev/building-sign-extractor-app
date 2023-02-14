@@ -19,8 +19,10 @@ const getImageData = (array, width, height) => {
   return new ImageData(rgba, width, height);
 };
 
-const extractSign = (img) => {
+const extractSign = (currentImage) => {
   let boxes = [];
+
+  const img = cv.imread(currentImage);
 
   let gray = new cv.Mat();
   let blur = new cv.Mat();

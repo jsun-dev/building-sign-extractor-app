@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Flex, Text } from "@chakra-ui/react";
-import { insideBox, renderImage } from "../utils";
+import { Flex } from "@chakra-ui/react";
+
 import DigitsOverlay from "../ui/DigitsOverlay";
+import { insideBox, renderImage } from "../utils";
 
 const BoundingBoxes = (props) => {
-  const [coords, setCoords] = useState(null);
+  const [mouseCoords, setMouseCoords] = useState(null);
   const [overlayPosition, setOverlayPosition] = useState(null);
   const [highlightedDigit, setHighlightedDigit] = useState(props.digitsText);
   const [isHover, setIsHover] = useState(false);
@@ -12,19 +13,11 @@ const BoundingBoxes = (props) => {
   const originalRef = useRef();
   const boxesRef = useRef();
 
-  const hoverCanvasHandler = (e) => {
-    setCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
-    setOverlayPosition({
-      x: e.nativeEvent.pageX + 20 + "px",
-      y: e.nativeEvent.pageY - 25 + "px",
-    });
-  };
-
   useEffect(() => {
     setIsHover(false);
 
-    if (props.boxes) {
-      const boxes = props.boxes;
+    const boxes = props.boxes;
+    if (boxes) {
       const image = props.currentImage;
       const digitsText = props.digitsText;
 
@@ -32,34 +25,34 @@ const BoundingBoxes = (props) => {
       renderImage(boxesRef, image);
 
       const ctx = boxesRef.current.getContext("2d");
-
       ctx.lineWidth = 2;
-      if (coords !== null) {
+
+      if (mouseCoords !== null) {
         ctx.fillStyle = "rgba(0, 255, 0, 0.3)";
 
-        if (insideBox(coords, boxes[0])) {
+        if (insideBox(mouseCoords, boxes[0])) {
           ctx.fillRect(boxes[0].x, boxes[0].y, boxes[0].w, boxes[0].h);
+          setIsHover(true);
           setHighlightedDigit(
             digitsText === "Recognizing..." ? digitsText : digitsText.charAt(0)
           );
-          setIsHover(true);
-        } else if (insideBox(coords, boxes[1])) {
+        } else if (insideBox(mouseCoords, boxes[1])) {
           ctx.fillRect(boxes[1].x, boxes[1].y, boxes[1].w, boxes[1].h);
+          setIsHover(true);
           setHighlightedDigit(
             digitsText === "Recognizing..." ? digitsText : digitsText.charAt(1)
           );
-          setIsHover(true);
-        } else if (insideBox(coords, boxes[2])) {
+        } else if (insideBox(mouseCoords, boxes[2])) {
           ctx.fillRect(boxes[2].x, boxes[2].y, boxes[2].w, boxes[2].h);
+          setIsHover(true);
           setHighlightedDigit(
             digitsText === "Recognizing..." ? digitsText : digitsText.charAt(2)
           );
-          setIsHover(true);
-        } else if (insideBox(coords, boxes[3])) {
+        } else if (insideBox(mouseCoords, boxes[3])) {
           ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
           ctx.fillRect(boxes[3].x, boxes[3].y, boxes[3].w, boxes[3].h);
-          setHighlightedDigit(digitsText);
           setIsHover(true);
+          setHighlightedDigit(digitsText);
         }
       }
 
@@ -71,7 +64,15 @@ const BoundingBoxes = (props) => {
       ctx.strokeStyle = "rgb(255, 0, 0)";
       ctx.strokeRect(boxes[3].x, boxes[3].y, boxes[3].w, boxes[3].h);
     }
-  }, [coords, props.boxes, props.digitsText]);
+  }, [mouseCoords, props.boxes, props.digitsText]);
+
+  const hoverCanvasHandler = (e) => {
+    setMouseCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
+    setOverlayPosition({
+      x: e.nativeEvent.pageX + 20 + "px",
+      y: e.nativeEvent.pageY - 25 + "px",
+    });
+  };
 
   return (
     <>

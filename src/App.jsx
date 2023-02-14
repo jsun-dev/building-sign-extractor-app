@@ -1,41 +1,26 @@
 import React, { useState, useEffect, useRef } from "react";
-import extractSign from "./extractSign";
-import { renderImageData } from "./utils";
-
-import ImageModal from "./ui/ImageModal";
-
-import cv from "@techstark/opencv-js";
+import { useToast, Button, Flex, Text, Link } from "@chakra-ui/react";
 import Tesseract from "tesseract.js";
 
-import {
-  Button,
-  Flex,
-  useToast,
-  Text,
-  Link,
-  Box,
-  Heading,
-  Container,
-} from "@chakra-ui/react";
 import BoundingBoxes from "./components/BoundingBoxes";
 import PerceptionPipeline from "./components/PerceptionPipeline";
 import CropTool from "./components/CropTool";
+import ImageModal from "./ui/ImageModal";
 import FeatureTabs from "./ui/FeatureTabs";
 import GitHubIcon from "./ui/GitHubIcon";
+import { displayToast, renderImageData } from "./utils";
+import extractSign from "./extractSign";
 
 const App = () => {
-  const toast = useToast();
-
   const [currentImage, setCurrentImage] = useState(null);
-  const [isOCR, setIsOCR] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isOcr, setIsOcr] = useState(false);
   const [digitsText, setDigitsText] = useState("Recognizing...");
-  const [result, setResult] = useState(null);
+  const [extractResult, setExtractResult] = useState(null);
   const [boxes, setBoxes] = useState(null);
   const [cropBox, setCropBox] = useState(null);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const imageSource = useRef();
+  const toast = useToast();
   const ocrRef = useRef();
 
   const features = [
@@ -51,7 +36,7 @@ const App = () => {
     },
     {
       title: "Perception Pipeline",
-      component: <PerceptionPipeline result={result} />,
+      component: <PerceptionPipeline extractResult={extractResult} />,
     },
     {
       title: "Crop Tool",
@@ -65,25 +50,24 @@ const App = () => {
     },
   ];
 
-  const clickImageHandler = (e) => {
-    if (!currentImage || currentImage.src !== e.target.src) {
-      setDigitsText("Recognizing...");
-      let image = new Image();
-      image.src = e.target.src;
+  useEffect(() => {
+    if (currentImage !== null) {
+      const result = extractSign(currentImage);
+      renderImageData(ocrRef, result.digitsRoi);
 
-      setCurrentImage(image);
-      setIsOCR(true);
-      setBoxes(null);
-      toast({
-        description: "Recognizing the digits...",
-        duration: 5000,
-        position: "top-right",
-        isClosable: true,
-      });
+      const ctx = ocrRef.current.getContext("2d");
+      Tesseract.recognize(ctx.canvas.toDataURL("image/png"), "eng").then(
+        (result) => {
+          setDigitsText(result.data.text);
+          setIsOcr(false);
+          displayToast(toast, "The digits have been successfully recognized!");
+        }
+      );
+
+      setExtractResult(result);
+      setBoxes(result.boxes);
     }
-
-    setIsModalOpen(false);
-  };
+  }, [currentImage]);
 
   const openModalHandler = () => {
     setIsModalOpen(true);
@@ -93,51 +77,42 @@ const App = () => {
     setIsModalOpen(false);
   };
 
-  useEffect(() => {
-    if (currentImage) {
-      const img = cv.imread(currentImage);
-      const result = extractSign(img);
+  const clickImageHandler = (e) => {
+    if (currentImage === null || currentImage.src !== e.target.src) {
+      let image = new Image();
+      image.src = e.target.src;
 
-      renderImageData(ocrRef, result.digitsRoi);
-
-      const ctx = ocrRef.current.getContext("2d");
-      Tesseract.recognize(ctx.canvas.toDataURL("image/png"), "eng").then(
-        (result) => {
-          setDigitsText(result.data.text);
-          setIsOCR(false);
-          toast({
-            description: "The digits have been successfully recognized!",
-            duration: 5000,
-            position: "top-right",
-            isClosable: true,
-          });
-        }
-      );
-
-      setResult(result);
-      setBoxes(result.boxes);
+      setCurrentImage(image);
+      setDigitsText("Recognizing...");
+      setIsOcr(true);
+      setBoxes(null);
+      displayToast(toast, "Recognizing the digits...");
     }
-  }, [currentImage]);
+
+    setIsModalOpen(false);
+  };
 
   return (
     <Flex m="20px" direction="column">
       <canvas ref={ocrRef} hidden />
       <ImageModal
         isModalOpen={isModalOpen}
-        closeModalHandler={closeModalHandler}
         clickImageHandler={clickImageHandler}
+        closeModalHandler={closeModalHandler}
       />
       <Link
         href="https://github.com/jsun-dev/building-sign-extractor-app"
-        isExternal
         position="absolute"
+        isExternal
       >
         <Button leftIcon={<GitHubIcon />} variant="outline">
           View on GitHub
         </Button>
       </Link>
       <Flex direction="column" alignItems="center">
-        <Heading as="h1">Building Sign Extractor</Heading>
+        <Text fontSize="4xl" as="b">
+          Building Sign Extractor
+        </Text>
         <Text fontSize="sm" mt="10px">
           A building sign extractor developed with traditional computer vision
           algorithms.
@@ -145,7 +120,7 @@ const App = () => {
         <Text fontSize="sm">
           Powered by OpenCV.js, Tesseract.js, Chakra UI, and React.
         </Text>
-        <Button onClick={openModalHandler} isDisabled={isOCR} mt="10px">
+        <Button onClick={openModalHandler} isDisabled={isOcr} mt="10px">
           Choose an image
         </Button>
       </Flex>

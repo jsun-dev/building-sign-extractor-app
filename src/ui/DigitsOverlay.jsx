@@ -10,7 +10,7 @@ const DigitsOverlay = (props) => {
     fontWeight: "bold",
     display: props.enabled ? "block" : "none",
     left: props.enabled && props.overlayPosition.x,
-    top: props.enabled && props.overlayPosition.y,
+    top: props.enabled && props.overlayPosition.y
   };
 
   return <span style={style}>{props.text}</span>;

@@ -9,6 +9,57 @@ const CropTool = (props) => {
   const drawRef = useRef();
   const cropRef = useRef();
 
+  useEffect(() => {
+    const image = props.currentImage;
+
+    if (image !== null) {
+      const cropBox = props.cropBox;
+      const canvasWidth = image.width;
+      const canvasHeight = image.height;
+
+      renderImage(drawRef, image);
+
+      const drawCtx = drawRef.current.getContext("2d");
+      const cropCtx = cropRef.current.getContext("2d");
+      cropCtx.canvas.width = canvasWidth;
+      cropCtx.canvas.height = canvasHeight;
+
+      if (cropBox !== null) {
+        if (cropBox.w > 0 && cropBox.h > 0) {
+          const imageData = drawCtx.getImageData(
+            cropBox.x,
+            cropBox.y,
+            cropBox.w,
+            cropBox.h
+          );
+          cropCtx.putImageData(imageData, cropBox.x, cropBox.y);
+        }
+
+        drawCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
+
+        drawCtx.fillRect(0, 0, canvasWidth, cropBox.y);
+        drawCtx.fillRect(0, cropBox.y, cropBox.x, cropBox.h);
+        drawCtx.fillRect(
+          cropBox.x + cropBox.w,
+          cropBox.y,
+          canvasWidth - (cropBox.x + cropBox.w),
+          cropBox.h
+        );
+        drawCtx.fillRect(
+          0,
+          cropBox.y + cropBox.h,
+          canvasWidth,
+          canvasHeight - (cropBox.y + cropBox.h)
+        );
+
+        drawCtx.strokeStyle = "white";
+        drawCtx.lineWidth = 2;
+        drawCtx.setLineDash([12]);
+        drawCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
+      }
+    }
+  }, [props.currentImage, props.cropBox]);
+
   const drawStartHandler = (e) => {
     setIsDrawing(true);
     setStartCoords({ x: e.nativeEvent.offsetX, y: e.nativeEvent.offsetY });
@@ -34,58 +85,6 @@ const CropTool = (props) => {
       props.setCropBox({ x: x, y: y, w: Math.abs(w), h: Math.abs(h) });
     }
   };
-
-  useEffect(() => {
-    const image = props.currentImage;
-
-    if (image) {
-      const cropBox = props.cropBox;
-
-      renderImage(drawRef, image);
-
-      const drawCtx = drawRef.current.getContext("2d");
-      const cropCtx = cropRef.current.getContext("2d");
-      cropCtx.canvas.width = image.width;
-      cropCtx.canvas.height = image.height;
-
-      if (cropBox) {
-        if (cropBox.w > 0 && cropBox.h > 0) {
-          const imageData = drawCtx.getImageData(
-            cropBox.x,
-            cropBox.y,
-            cropBox.w,
-            cropBox.h
-          );
-          cropCtx.putImageData(imageData, cropBox.x, cropBox.y);
-        }
-
-        drawCtx.fillStyle = "rgba(0, 0, 0, 0.7)";
-
-        const canvasWidth = drawCtx.canvas.width;
-        const canvasHeight = drawCtx.canvas.height;
-
-        drawCtx.fillRect(0, 0, canvasWidth, cropBox.y);
-        drawCtx.fillRect(0, cropBox.y, cropBox.x, cropBox.h);
-        drawCtx.fillRect(
-          cropBox.x + cropBox.w,
-          cropBox.y,
-          canvasWidth - (cropBox.x + cropBox.w),
-          cropBox.h
-        );
-        drawCtx.fillRect(
-          0,
-          cropBox.y + cropBox.h,
-          canvasWidth,
-          canvasHeight - (cropBox.y + cropBox.h)
-        );
-
-        drawCtx.strokeStyle = "white";
-        drawCtx.setLineDash([12]);
-        drawCtx.lineWidth = 2;
-        drawCtx.strokeRect(cropBox.x, cropBox.y, cropBox.w, cropBox.h);
-      }
-    }
-  }, [props.currentImage, props.cropBox]);
 
   return (
     <Flex justifyContent="center" gap="20px">

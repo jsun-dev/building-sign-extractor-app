@@ -24,3 +24,18 @@ export const insideBox = (coords, box) => {
     coords.y <= endY
   );
 };
+
+export const displayToast = (
+  toast,
+  description,
+  duration = 5000,
+  position = "top-right",
+  isClosable = true
+) => {
+  toast({
+    description: description,
+    duration: duration,
+    position: position,
+    isClosable: isClosable,
+  });
+};

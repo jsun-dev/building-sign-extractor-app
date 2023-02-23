@@ -86,6 +86,7 @@ const App = () => {
       setDigitsText("Recognizing...");
       setIsOcr(true);
       setBoxes(null);
+      setCropBox(null);
       displayToast(toast, "Recognizing the digits...");
     }
 
